@@ -8,7 +8,7 @@ const bot = new Telegraf(process.env.BOT_TOKEN);//BOT_TOKEN in .env file
 
 const BUTTON_REQUESTS = {
     MATCHES: ['Live matches', 'List of 15 matches', 'Intresting matches', 'Results'],
-    EVENTS: ['This year events', 'Large tournaments', 'Search by name'],
+    EVENTS: ['This year events', 'Large tournaments'],
     PLAYERS: ['Top 10 players', 'Search by name'],
     TEAMS: ['Top 5 teams', 'Search team']
 };
@@ -196,21 +196,27 @@ const queryForTopEvents = async (ctx) => {
     ctx.reply(data);
 }
 
-const queryForEvent = async (ctx) => {
-    let data = 'Here is a:';
-
-    ctx.reply(data);
-}
-
 const queryForTopPlayers = async (ctx) => {
-    let data = 'Here is a:';
+    let data = 'Top 10 players this year:\n\n';
+    let year = new Date().getFullYear();
+    let dateS = `${year}-01-01`;
+    let dateE = `${year}-12-31`;
+    let players = await HLTV.getPlayerRanking({
+        startDate: dateS,
+        endDate: dateE,
+        minMapCount: 1,
+        rankingFilter: 'Top20'
+    });
+    for (let i = 0; i < 10; i++) {
+        data += `🏅${players[i].name} - ${players[i].teams[0].name}🎗\n| [Played Maps]: ${players[i].maps} | [Rating]: ${players[i].rating} |\n\n`
+    }
 
     ctx.reply(data);
 }
 
 const queryForPlayer = async (ctx) => {
     let data = 'Here is a:';
-
+    //mb use bot.on('inline_query')
     ctx.reply(data);
 }
 
@@ -235,7 +241,6 @@ const onCallbackQuery = (ctx) => {
         case 'Results': queryForResults(ctx); break;
         case 'This year events': queryForYearEvents(ctx); break;
         case 'Large tournaments': queryForTopEvents(ctx); break;
-        case 'Search event': queryForEvent(ctx); break;
         case 'Top 10 players': queryForTopPlayers(ctx); break;
         case 'Search by name': queryForPlayer(ctx); break;
         case 'Top 5 teams': queryForTopTeams(ctx); break;
