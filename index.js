@@ -10,7 +10,7 @@ const BUTTON_REQUESTS = {
     MATCHES: ['Live matches', 'List of 15 matches', 'Intresting matches', 'Results'],
     EVENTS: ['This year events', 'Large tournaments'],
     PLAYERS: ['Top 10 players', 'Search by name'],
-    TEAMS: ['Top 5 teams', 'Search team']
+    TEAMS: ['HLTV top teams', 'Search team']
 };
 
 const MONTH = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -221,7 +221,15 @@ const queryForPlayer = async (ctx) => {
 }
 
 const queryForTopTeams = async (ctx) => {
-    let data = 'Here is a:';
+    let data = 'Top teams for rating HLTV:\n\n';
+    let teams = await HLTV.getTeamRanking();
+    teams.forEach(team => {
+        let change;
+        if (team.change == 0) change = '🔘';
+        else if (team.change > 0) change = '🔺';
+        else change = '🔻';
+        data += `${change} #${team.place} ${team.team.name} ~ Points: ${team.points}\n\n`;
+    })
 
     ctx.reply(data);
 }
@@ -243,7 +251,7 @@ const onCallbackQuery = (ctx) => {
         case 'Large tournaments': queryForTopEvents(ctx); break;
         case 'Top 10 players': queryForTopPlayers(ctx); break;
         case 'Search by name': queryForPlayer(ctx); break;
-        case 'Top 5 teams': queryForTopTeams(ctx); break;
+        case 'HLTV top teams': queryForTopTeams(ctx); break;
         case 'Search team': queryForTeam(ctx); break;
     };
 };
