@@ -10,12 +10,11 @@ const BUTTON_REQUESTS = {
     MATCHES: ['Live matches', 'List of 15 matches', 'Intresting matches', 'Results'],
     EVENTS: ['This year events', 'Large tournaments'],
     PLAYERS: ['Top 10 players', 'Search by name'],
-    TEAMS: ['HLTV top teams', 'Search team']
+    TEAMS: ['HLTV top teams']
 };
 
 const MONTH = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const _MONTH = MONTH.map(x => x.slice(0, 3));
-
 //FUNC::
 
 const matchfunc = async (ctx) => {
@@ -181,7 +180,7 @@ const queryForTopEvents = async (ctx) => {
     let events = await HLTV.getEvents();
 
     events.forEach(kvartal => {
-        data += `\n${MONTH[kvartal.month].toUpperCase()}:\n`
+        data += `${MONTH[kvartal.month].toUpperCase()}:\n`
         const eventsArr = kvartal.events;
         eventsArr.forEach(event => {
             if (event.prizePool != 'Other' && event.prizePool.length >= 8) {
@@ -214,10 +213,29 @@ const queryForTopPlayers = async (ctx) => {
     ctx.reply(data);
 }
 
-const queryForPlayer = async (ctx) => {
-    let data = 'Here is a:';
-    //mb use bot.on('inline_query')
-    ctx.reply(data);
+const queryForPlayer = (ctx) => {
+    ctx.reply('Enter "p/" + <player name>\n\nExample: [p/s1mple]');
+}
+
+const queryInlineForPlayer = async (ctx) => {
+    let data;
+    const searchName = ctx.message.text.split('/')[1];
+    try {
+        let player = await HLTV.getPlayerByName({ name: searchName });
+        let playerStats = player.statistics;
+        data = `👦${player.name} [${player.ign}]👦\n
+        Team: ${player.team.name}
+        Country: ${player.country.name} || Age: ${player.age}
+        🔫Statistcs:🔫
+        |Rating: ${playerStats.rating} || Kills/Round: ${playerStats.killsPerRound}|
+        |Headshots: ${playerStats.headshots} || Impact: ${playerStats.rating}|
+        |Maps: ${playerStats.mapsPlayed} || Death/Round: ${playerStats.deathsPerRound} |\n
+        https://hltv.org/player/${player.id}/${player.ign}`;
+        await ctx.replyWithPhoto(player.image);
+        ctx.reply(data);
+    } catch {
+        ctx.reply('😥Sorry but we can`t find this player in HLTV data-base');
+    }
 }
 
 const queryForTopTeams = async (ctx) => {
@@ -234,12 +252,6 @@ const queryForTopTeams = async (ctx) => {
     ctx.reply(data);
 }
 
-const queryForTeam = async (ctx) => {
-    let data = 'Here is a:';
-
-    ctx.reply(data);
-}
-
 const onCallbackQuery = (ctx) => {
     const data = ctx.update.callback_query.data;
     switch (data) {
@@ -252,7 +264,6 @@ const onCallbackQuery = (ctx) => {
         case 'Top 10 players': queryForTopPlayers(ctx); break;
         case 'Search by name': queryForPlayer(ctx); break;
         case 'HLTV top teams': queryForTopTeams(ctx); break;
-        case 'Search team': queryForTeam(ctx); break;
     };
 };
 
@@ -260,7 +271,7 @@ const onCallbackQuery = (ctx) => {
 
 //DEFAULT
 bot.start((ctx) => {
-    ctx.reply('Welcome dude',
+    ctx.reply('🖐Welcome to HLTV HELP BOT🖐',
         Markup.keyboard([
             ['Matches', 'Events'],
             ['Players', 'Teams']
@@ -280,5 +291,9 @@ bot.hears('Teams', teamsfunc);
 bot.on('callback_query', ctx => {
     onCallbackQuery(ctx);
 });
+
+bot.on('text', (ctx) => {
+    if (ctx.message.text[0] == 'p' && ctx.message.text[1] == '/') queryInlineForPlayer(ctx);
+})
 
 bot.launch();
