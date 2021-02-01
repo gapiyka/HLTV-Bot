@@ -271,9 +271,9 @@ const queryForTopTeams = async (ctx) => {
 }
 
 const subFunc = (ctx, search) => {
-    let user = USERS_SUBSCRIPTIONS.find(user => user.userID);
+    let user = USERS_SUBSCRIPTIONS.find(user => { if (user.userID == ctx.message.from.id) return user });
     let teamID = search.team.id;
-    if (user == undefined || user.userID != ctx.message.from.id) {
+    if (user == undefined) {
         USERS_SUBSCRIPTIONS.push({ userID: ctx.message.from.id, subs: [teamID] });
         ctx.reply('✅You add this team to your list of subscriptions');
     } else if (user.subs.includes(teamID)) {
