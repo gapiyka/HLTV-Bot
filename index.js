@@ -5,12 +5,10 @@ const { Telegraf, Markup } = require('telegraf');
 const FUNCTIONS = require('./functions');
 
 const bot = new Telegraf(process.env.BOT_TOKEN);//BOT_TOKEN in .env file
-let SUB_TIMER = [];
 
 
 //DEFAULT
 bot.start((ctx) => {
-    SUB_TIMER.push(setInterval(() => FUNCTIONS.CheckOnSub(ctx), 1200000));
     ctx.reply('🖐Welcome to HLTV HELP BOT🖐',
         Markup.keyboard([
             ['Matches', 'Events'],

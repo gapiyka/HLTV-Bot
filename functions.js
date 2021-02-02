@@ -11,7 +11,7 @@ const BUTTON_REQUESTS = {
     TEAMS: ['HLTV top teams']
 };
 const USERS_SUBSCRIPTIONS = [];
-
+let SUB_TIMER = [];
 
 function ThisDay(value) {
     const today = new Date().getDate();
@@ -275,6 +275,7 @@ const subFunc = (ctx, search) => {
     let teamID = search.team.id;
     if (user == undefined) {
         USERS_SUBSCRIPTIONS.push({ userID: ctx.message.from.id, subs: [teamID] });
+        SUB_TIMER.push(setInterval(() => CheckOnSub(ctx), 1200000));
         ctx.reply('✅You add this team to your list of subscriptions');
     } else if (user.subs.includes(teamID)) {
         ctx.reply('You already subscribed on this team');
@@ -302,29 +303,26 @@ const commandForDelSubscribe = (ctx) => {
 }
 
 async function CheckOnSub(ctx) {
-    if (USERS_SUBSCRIPTIONS.length != 0) {
-        let findMatches = [];
-        let user = USERS_SUBSCRIPTIONS.find(user => {
-            if (user.userID == ctx.message.from.id) return user;
+    let findMatches = [];
+    let user = USERS_SUBSCRIPTIONS.find(user => {
+        if (user.userID == ctx.message.from.id) return user;
+    });
+    if (user) {
+        let today = new Date().getDate();
+        let matches = await (await HLTV.getMatches()).filter(ThisDay);
+        user.subs.forEach(element => {
+            let res = matches.find(match => {
+                if (today == new Date(match.date).getDate() && (match.team1.id == element || match.team2.id == element)) return match;
+            });
+            if (res != undefined) findMatches.push(res);
         });
-        if (user) {
-            let today = new Date().getDate();
-            let matches = await (await HLTV.getMatches()).filter(ThisDay);
-            user.subs.forEach(element => {
-                let res = matches.find(match => {
-                    if (today == new Date(match.date).getDate() && (match.team1.id == element || match.team2.id == element)) return match;
-                });
-                if (res != undefined) findMatches.push(res);
-            });
-        }
-
-        if (findMatches.length != 0) {
-            let now = Date.parse(new Date());
-            findMatches.forEach(element => {
-                let dif = Math.round((element.date - now) / 60000);
-                if (dif <= 30) ctx.reply(`🌀  🌀  🌀\nMatch: ${element.team1.name} vs ${element.team2.name} will start in ${dif} minutes\n🍿  🍿  🍿`);
-            });
-        }
+    }
+    if (findMatches.length != 0) {
+        let now = Date.parse(new Date());
+        findMatches.forEach(element => {
+            let dif = Math.round((element.date - now) / 60000);
+            if (dif <= 30) ctx.reply(`🌀  🌀  🌀\nMatch: ${element.team1.name} vs ${element.team2.name} will start in ${dif} minutes\n🍿  🍿  🍿`);
+        });
     }
 }
 
@@ -343,5 +341,4 @@ module.exports = {
     commandForSubscribe,
     commandForDelSubscribe,
     onCallbackQuery,
-    CheckOnSub,
 };
