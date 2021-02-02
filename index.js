@@ -33,6 +33,10 @@ bot.command('unsubscribe', (ctx) => {
     FUNCTIONS.commandForDelSubscribe(ctx);
 });
 
+bot.command('news', (ctx) => {
+    FUNCTIONS.queryForNews(ctx);
+});
+
 bot.on('callback_query', ctx => {
     FUNCTIONS.onCallbackQuery(ctx);
 });

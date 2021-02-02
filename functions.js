@@ -1,6 +1,7 @@
 'use strict';
 
 const { HLTV } = require('hltv');
+const getNews = require('hltv-api').default.getNews;
 
 const MONTH = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const _MONTH = MONTH.map(x => x.slice(0, 3));
@@ -270,6 +271,13 @@ const queryForTopTeams = async (ctx) => {
     ctx.reply(data);
 }
 
+const queryForNews = async (ctx) => {
+    let news = await getNews();
+    for (let val of news) {
+        ctx.reply(`🗞${val.title}\n\n${val.description}\n\n🔖🔖${val.date.slice(5, 22)}🔖🔖\n${val.link}`)
+    }
+}
+
 const subFunc = (ctx, search) => {
     let user = USERS_SUBSCRIPTIONS.find(user => { if (user.userID == ctx.message.from.id) return user });
     let teamID = search.team.id;
@@ -338,6 +346,7 @@ module.exports = {
     playersfunc,
     teamsfunc,
     queryInlineForPlayer,
+    queryForNews,
     commandForSubscribe,
     commandForDelSubscribe,
     onCallbackQuery,
