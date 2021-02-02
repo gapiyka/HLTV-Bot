@@ -11,8 +11,18 @@ const BUTTON_REQUESTS = {
     PLAYERS: ['Top 10 players', 'Search by name'],
     TEAMS: ['HLTV top teams']
 };
+const STICKERS = ['w0DL7kC/1', 'XpJZhd1/2', 'XVmsqYw/3', 'BB0YPts/4', 'gZ3Q80F/5', 'J56mp32/6', 'b7FpgTH/7', '3056g9f/8', 'vJg7FXw/9', 'NL0CX0p/10', 'J5yZJn8/11', 'FWDLkr7/12', 'ZxkZf1z/13'];
 const USERS_SUBSCRIPTIONS = [];
 let SUB_TIMER = [];
+
+function random(min, max) {
+    return Math.floor(Math.random() * (max - min) + min)
+}
+
+function GetStickerUrl() {
+    const url = `https://i.ibb.co/${STICKERS[random(0, STICKERS.length)]}.webp`;
+    return url;
+}
 
 function ThisDay(value) {
     const today = new Date().getDate();
@@ -118,7 +128,7 @@ const queryForLive = async (ctx) => {
     let index = 0;
 
     while (matches[index].live) {
-        data += `\n🎮${matches[index].team1.name} vs ${matches[index].team2.name}🎮\n`;
+        data += `\n🎮${matches[index].team1.name} vs ${matches[index].team2.name}🎮\nid: ${matches[index].id}\n`;
         index++;
     }
     if (data == 'Here is a list of live:') ctx.reply('☕️Drink cup of coffee, there are none matches now.🧩');
@@ -278,6 +288,11 @@ const queryForNews = async (ctx) => {
     }
 }
 
+const queryForStream = (ctx, message) => {
+    const matchID = message.slice(8, 15);
+    ctx.reply(`https://www.hltv.org/live?matchId=${matchID}`);
+}
+
 const subFunc = (ctx, search) => {
     let user = USERS_SUBSCRIPTIONS.find(user => { if (user.userID == ctx.message.from.id) return user });
     let teamID = search.team.id;
@@ -347,7 +362,9 @@ module.exports = {
     teamsfunc,
     queryInlineForPlayer,
     queryForNews,
+    queryForStream,
     commandForSubscribe,
     commandForDelSubscribe,
     onCallbackQuery,
+    GetStickerUrl,
 };
