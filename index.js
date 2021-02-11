@@ -25,7 +25,7 @@ bot.hears('Players', FUNCTIONS.playersfunc);
 bot.hears('Teams', FUNCTIONS.teamsfunc);
 
 bot.command('subscribe', (ctx) => {
-    if (ctx.message.text.length > 10) FUNCTIONS.commandForSubscribe(ctx, ctx.message.text);
+    if (ctx.message.text.length > 10) FUNCTIONS.commandForSubscribe(bot, ctx, ctx.message.text);
     else ctx.reply('Please input [/subscribe <TEAM>] || For example: [/subscribe Astralis]');
 });
 
@@ -35,6 +35,10 @@ bot.command('unsubscribe', (ctx) => {
 
 bot.command('news', (ctx) => {
     FUNCTIONS.queryForNews(ctx);
+});
+
+bot.command('git', (ctx) => {
+    FUNCTIONS.queryForGit(ctx);
 });
 
 bot.command('stream', async (ctx) => {
@@ -47,8 +51,10 @@ bot.on('callback_query', ctx => {
     FUNCTIONS.onCallbackQuery(ctx);
 });
 
+
 bot.on('text', (ctx) => {
     if (ctx.message.text[0] == 'p' && ctx.message.text[1] == '/') FUNCTIONS.queryInlineForPlayer(ctx);
 })
 
+FUNCTIONS.LoadBot(bot);
 bot.launch();

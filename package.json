@@ -19,6 +19,7 @@
   "homepage": "https://github.com/gapiyka/HLTV-Bot#readme",
   "dependencies": {
     "dotenv": "^8.2.0",
+    "google-spreadsheet": "^3.1.15",
     "hltv": "^2.22.2",
     "hltv-api": "^2.0.1",
     "telegraf": "^4.0.2"

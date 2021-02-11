@@ -2,6 +2,7 @@
 
 const { HLTV } = require('hltv');
 const getNews = require('hltv-api').default.getNews;
+const database = require('./db');
 
 const MONTH = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const _MONTH = MONTH.map(x => x.slice(0, 3));
@@ -12,11 +13,22 @@ const BUTTON_REQUESTS = {
     TEAMS: ['HLTV top teams']
 };
 const STICKERS = ['w0DL7kC/1', 'XpJZhd1/2', 'XVmsqYw/3', 'BB0YPts/4', 'gZ3Q80F/5', 'J56mp32/6', 'b7FpgTH/7', '3056g9f/8', 'vJg7FXw/9', 'NL0CX0p/10', 'J5yZJn8/11', 'FWDLkr7/12', 'ZxkZf1z/13'];
-const USERS_SUBSCRIPTIONS = [];
+
+let USERS_SUBSCRIPTIONS;
 let SUB_TIMER = [];
+
 
 function random(min, max) {
     return Math.floor(Math.random() * (max - min) + min)
+}
+
+async function LoadBot(bot) {
+    await database.CopyData().then(val => USERS_SUBSCRIPTIONS = val);
+    USERS_SUBSCRIPTIONS.forEach(user => { AddTimer(bot, user.userID) });
+}
+
+function AddTimer(bot, userID) {
+    SUB_TIMER.push(setInterval(() => CheckOnSub(bot, userID), 1200000));
 }
 
 function GetStickerUrl() {
@@ -293,42 +305,47 @@ const queryForStream = (ctx, message) => {
     ctx.reply(`https://www.hltv.org/live?matchId=${matchID}`);
 }
 
-const subFunc = (ctx, search) => {
+const queryForGit = (ctx) => {
+    ctx.reply(`https://github.com/gapiyka/HLTV-Bot`);
+    ctx.replyWithVideo('https://media.giphy.com/media/3wvHzrzgEj5y0vR9ma/giphy.gif');
+}
+
+const subFunc = async (bot, ctx, search) => {
+    await database.CopyData().then(val => USERS_SUBSCRIPTIONS = val);
+    console.log(USERS_SUBSCRIPTIONS);
     let user = USERS_SUBSCRIPTIONS.find(user => { if (user.userID == ctx.message.from.id) return user });
     let teamID = search.team.id;
     if (user == undefined) {
-        USERS_SUBSCRIPTIONS.push({ userID: ctx.message.from.id, subs: [teamID] });
-        SUB_TIMER.push(setInterval(() => CheckOnSub(ctx), 1200000));
+        database.AddRow(ctx.message.from.id, teamID);
+        AddTimer(bot, ctx.message.from.id);
         ctx.reply('✅You add this team to your list of subscriptions');
-    } else if (user.subs.includes(teamID)) {
+    } else if (user.subs.includes(teamID.toString())) {
         ctx.reply('You already subscribed on this team');
     } else {
-        user.subs.push(teamID);
+        database.ChangeRow(ctx.message.from.id, teamID);
         ctx.reply('✅You add this team to your list of subscriptions');
     }
 }
 
-const commandForSubscribe = async (ctx, message) => {
+const commandForSubscribe = async (bot, ctx, message) => {
     let teams = await HLTV.getTeamRanking();
     let search = teams.find(team => {
         if (team.team.name.split(' ')[0].toLowerCase() == message.split(' ')[1].toLowerCase()) return team;
     })
     if (search == undefined) ctx.reply('We can`t find this team😥');
-    else subFunc(ctx, search);
+    else subFunc(bot, ctx, search);
 }
 
 const commandForDelSubscribe = (ctx) => {
-    let user = USERS_SUBSCRIPTIONS.find(user => {
-        if (user.userID == ctx.message.from.id) return user;
-    });
-    if (user) user.subs = [];
+    database.ClearSubs();
     ctx.reply('Your list of subscriptions is empty .  .  .😥');
 }
 
-async function CheckOnSub(ctx) {
+async function CheckOnSub(bot, everyID) {
+    await database.CopyData().then(val => USERS_SUBSCRIPTIONS = val);
     let findMatches = [];
     let user = USERS_SUBSCRIPTIONS.find(user => {
-        if (user.userID == ctx.message.from.id) return user;
+        if (user.userID == everyID) return user;
     });
     if (user) {
         let today = new Date().getDate();
@@ -344,14 +361,9 @@ async function CheckOnSub(ctx) {
         let now = Date.parse(new Date());
         findMatches.forEach(element => {
             let dif = Math.round((element.date - now) / 60000);
-            if (dif <= 30) ctx.reply(`🌀  🌀  🌀\nMatch: ${element.team1.name} vs ${element.team2.name} will start in ${dif} minutes\n🍿  🍿  🍿`);
+            if (dif <= 30) bot.telegram.sendMessage(everyID, `🌀  🌀  🌀\nMatch: ${element.team1.name} vs ${element.team2.name} will start in ${dif} minutes\n🍿  🍿  🍿`);
         });
     }
-}
-
-function GetSubscriptionsToLogs() {
-    console.log('SUBSCRIPTIONS LIST:');
-    console.log(USERS_SUBSCRIPTIONS);
 }
 
 
@@ -363,8 +375,10 @@ module.exports = {
     queryInlineForPlayer,
     queryForNews,
     queryForStream,
+    queryForGit,
     commandForSubscribe,
     commandForDelSubscribe,
     onCallbackQuery,
     GetStickerUrl,
+    LoadBot,
 };
