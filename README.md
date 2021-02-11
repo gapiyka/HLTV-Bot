@@ -15,6 +15,7 @@ rate and amount of your requests if you value your access to HLTV.
 
 ADDITIONAL:
 -[Dotenv](https://www.npmjs.com/package/dotenv)
+-[Google SpreadSheets](https://www.npmjs.com/package/google-spreadsheet)
 
 ## Как использовать?
 📕Для работы с ботом перейдите по [ссылке](https://t.me/HltvHelpBot)
