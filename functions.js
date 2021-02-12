@@ -10,7 +10,7 @@ const BUTTON_REQUESTS = {
     MATCHES: ['Live matches', 'List of 15 matches', 'Intresting matches', 'Results'],
     EVENTS: ['This year events', 'Large tournaments'],
     PLAYERS: ['Top 10 players', 'Search by name'],
-    TEAMS: ['HLTV top teams']
+    TEAMS: ['HLTV top teams', 'Favorite teams']
 };
 const STICKERS = ['w0DL7kC/1', 'XpJZhd1/2', 'XVmsqYw/3', 'BB0YPts/4', 'gZ3Q80F/5', 'J56mp32/6', 'b7FpgTH/7', '3056g9f/8', 'vJg7FXw/9', 'NL0CX0p/10', 'J5yZJn8/11', 'FWDLkr7/12', 'ZxkZf1z/13'];
 
@@ -130,6 +130,7 @@ const onCallbackQuery = (ctx) => {
         case 'Top 10 players': queryForTopPlayers(ctx); break;
         case 'Search by name': queryForPlayer(ctx); break;
         case 'HLTV top teams': queryForTopTeams(ctx); break;
+        case 'Favorite teams': queryForMyTeams(ctx); break;
     };
 };
 
@@ -293,6 +294,21 @@ const queryForTopTeams = async (ctx) => {
     ctx.reply(data);
 }
 
+const queryForMyTeams = async (ctx) => {
+    await database.CopyData().then(val => USERS_SUBSCRIPTIONS = val);
+    let user = await USERS_SUBSCRIPTIONS.find(user => { if (user.userID == ctx.update.callback_query.from.id) return user });
+    let data = '🚥Your favorite teams:🚥\n';
+    if (user && user.subs.length != 0) {
+        for (let sub of user.subs) {
+            let team = await HLTV.getTeam({ id: sub });
+            data += `${team.name}\n`;
+        };
+    }
+    else data += 'Your list is empty😥😥'
+    data += '\n\nTo add more teams use command /subscribe';
+    ctx.reply(data);
+}
+
 const queryForNews = async (ctx) => {
     let news = await getNews();
     for (let val of news) {
@@ -312,7 +328,6 @@ const queryForGit = (ctx) => {
 
 const subFunc = async (bot, ctx, search) => {
     await database.CopyData().then(val => USERS_SUBSCRIPTIONS = val);
-    console.log(USERS_SUBSCRIPTIONS);
     let user = USERS_SUBSCRIPTIONS.find(user => { if (user.userID == ctx.message.from.id) return user });
     let teamID = search.team.id;
     if (user == undefined) {
@@ -337,7 +352,7 @@ const commandForSubscribe = async (bot, ctx, message) => {
 }
 
 const commandForDelSubscribe = (ctx) => {
-    database.ClearSubs();
+    database.ClearSubs(ctx.message.from.id);
     ctx.reply('Your list of subscriptions is empty .  .  .😥');
 }
 
@@ -348,24 +363,20 @@ async function CheckOnSub(bot, everyID) {
         if (user.userID == everyID) return user;
     });
     if (user) {
-        let today = new Date().getDate();
         let matches = await (await HLTV.getMatches()).filter(ThisDay);
         user.subs.forEach(element => {
-            let res = matches.find(match => {
-                if (today == new Date(match.date).getDate() && (match.team1.id == element || match.team2.id == element)) return match;
+            matches.find(match => {
+                if (match.team1 || match.team2) {
+                    let now = Date.parse(new Date());
+                    let dif = Math.round((match.date - now) / 60000);
+                    if ((match.team1.id == element || match.team2.id == element) && dif <= 30) {
+                        bot.telegram.sendMessage(everyID, `🌀  🌀  🌀\nMatch: ${match.team1.name} vs ${match.team2.name} will start in ${dif} minutes\n🍿  🍿  🍿`);
+                    }
+                }
             });
-            if (res != undefined) findMatches.push(res);
-        });
-    }
-    if (findMatches.length != 0) {
-        let now = Date.parse(new Date());
-        findMatches.forEach(element => {
-            let dif = Math.round((element.date - now) / 60000);
-            if (dif <= 30) bot.telegram.sendMessage(everyID, `🌀  🌀  🌀\nMatch: ${element.team1.name} vs ${element.team2.name} will start in ${dif} minutes\n🍿  🍿  🍿`);
         });
     }
 }
-
 
 module.exports = {
     matchfunc,

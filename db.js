@@ -1,7 +1,6 @@
 'use strict';
 
 const { GoogleSpreadsheet } = require('google-spreadsheet');
-require('dotenv').config();
 
 
 async function accessSpreadsheet() {
@@ -20,15 +19,15 @@ async function CopyData() {
     const dataArray = [];
     const rows = await sheet.getRows();
 
-    await rows.forEach(row => {
-        dataArray.push({ userID: row._rawData[0], subs: row._rawData[1].toString().split(';') });
+    rows.forEach(row => {
+        dataArray.push({ userID: row._rawData[0], subs: row._rawData[1] ? row._rawData[1].toString().split(';') : [] });
     });
     return dataArray;
 }
 
 async function AddRow(user, sub) {
     const sheet = await accessSpreadsheet();
-    const newSheet = await sheet.addRow({ User: user, Sub: `${sub}` });
+    const newSheet = await sheet.addRow({ User: user, Sub: sub });
 }
 
 async function ChangeRow(user, sub) {
@@ -36,7 +35,7 @@ async function ChangeRow(user, sub) {
     const rows = await sheet.getRows();
 
     const userIndex = rows.findIndex(x => { if (x._rawData[0] == user) return x });
-    let SubsStr = rows[userIndex].Sub.toString() + `;${sub}`;
+    let SubsStr = rows[userIndex].Sub ? rows[userIndex].Sub.toString() + `;${sub}` : sub;
     rows[userIndex].Sub = SubsStr;
     rows[userIndex].save();
 }
