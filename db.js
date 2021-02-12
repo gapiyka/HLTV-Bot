@@ -1,6 +1,8 @@
 'use strict';
 
 const { GoogleSpreadsheet } = require('google-spreadsheet');
+require('dotenv').config();
+
 
 async function accessSpreadsheet() {
     const doc = new GoogleSpreadsheet(process.env.DATA_BASE);
