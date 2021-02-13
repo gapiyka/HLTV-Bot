@@ -42,80 +42,42 @@ function ThisDay(value) {
     return today == dayOfGame;
 }
 
-const matchfunc = async (ctx) => {
+function MakeInlineKeyboard(type) {
+    let inline_keyboard = [];
+
+    type.forEach(element => inline_keyboard.push([
+        {
+            text: element,
+            callback_data: element.toString(),
+        },
+    ]));
+    const keyboard = {
+        reply_markup: JSON.stringify({
+            inline_keyboard,
+        }),
+    };
+
+    return keyboard;
+}
+
+const matchfunc = (ctx) => {
     let data = "Choose which variation of list you want receive:";
-    let inline_keyboard = [];
-
-    BUTTON_REQUESTS.MATCHES.forEach(element => inline_keyboard.push([
-        {
-            text: element,
-            callback_data: element.toString(),
-        },
-    ]))
-    const keyboard = {
-        reply_markup: JSON.stringify({
-            inline_keyboard,
-        }),
-    };
-
-    ctx.reply(data, keyboard);
+    ctx.reply(data, MakeInlineKeyboard(BUTTON_REQUESTS.MATCHES));
 };
 
-const eventsfunc = async (ctx) => {
+const eventsfunc = (ctx) => {
     let data = "Choose one:";
-    let inline_keyboard = [];
-
-    BUTTON_REQUESTS.EVENTS.forEach(element => inline_keyboard.push([
-        {
-            text: element,
-            callback_data: element.toString(),
-        },
-    ]))
-    const keyboard = {
-        reply_markup: JSON.stringify({
-            inline_keyboard,
-        }),
-    };
-
-    ctx.reply(data, keyboard);
+    ctx.reply(data, MakeInlineKeyboard(BUTTON_REQUESTS.EVENTS));
 };
 
-const playersfunc = async (ctx) => {
+const playersfunc = (ctx) => {
     let data = "Choose one:";
-    let inline_keyboard = [];
-
-    BUTTON_REQUESTS.PLAYERS.forEach(element => inline_keyboard.push([
-        {
-            text: element,
-            callback_data: element.toString(),
-        },
-    ]))
-    const keyboard = {
-        reply_markup: JSON.stringify({
-            inline_keyboard,
-        }),
-    };
-
-    ctx.reply(data, keyboard);
+    ctx.reply(data, MakeInlineKeyboard(BUTTON_REQUESTS.PLAYERS));
 };
 
-const teamsfunc = async (ctx) => {
+const teamsfunc = (ctx) => {
     let data = "Choose one:";
-    let inline_keyboard = [];
-
-    BUTTON_REQUESTS.TEAMS.forEach(element => inline_keyboard.push([
-        {
-            text: element,
-            callback_data: element.toString(),
-        },
-    ]))
-    const keyboard = {
-        reply_markup: JSON.stringify({
-            inline_keyboard,
-        }),
-    };
-
-    ctx.reply(data, keyboard);
+    ctx.reply(data, MakeInlineKeyboard(BUTTON_REQUESTS.TEAMS));
 };
 
 const onCallbackQuery = (ctx) => {
@@ -183,7 +145,7 @@ const queryForStars = async (ctx) => {
             data += `\n🎮${x.team1.name} vs ${x.team2.name}🎮\n`;
         }
     })
-    if (data == 'Here is a list of matches:') ctx.reply('☕️Drink cup of coffee, nothing intresting.🧩');
+    if (data == 'Here is a list of matches:') ctx.reply('☕️Drink cup of coffee, nothing interesting.🧩');
     else ctx.reply(data);
 }
 
@@ -363,7 +325,7 @@ async function CheckOnSub(bot, everyID) {
         if (user.userID == everyID) return user;
     });
     if (user) {
-        let matches = await (await HLTV.getMatches()).filter(ThisDay);
+        let matches = await HLTV.getMatches().filter(ThisDay);
         user.subs.forEach(element => {
             matches.find(match => {
                 if (match.team1 || match.team2) {

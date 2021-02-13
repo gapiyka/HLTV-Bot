@@ -51,7 +51,6 @@ bot.on('callback_query', ctx => {
     FUNCTIONS.onCallbackQuery(ctx);
 });
 
-
 bot.on('text', (ctx) => {
     if (ctx.message.text[0] == 'p' && ctx.message.text[1] == '/') FUNCTIONS.queryInlineForPlayer(ctx);
 })
