@@ -325,7 +325,7 @@ async function CheckOnSub(bot, everyID) {
         if (user.userID == everyID) return user;
     });
     if (user) {
-        let matches = await HLTV.getMatches().filter(ThisDay);
+        let matches = (await HLTV.getMatches()).filter(ThisDay);
         user.subs.forEach(element => {
             matches.find(match => {
                 if (match.team1 || match.team2) {
